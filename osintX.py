@@ -16,8 +16,15 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import Request, urlopen
 
+try:
+    from ui import console, show_error, show_menu, show_result
+except ModuleNotFoundError as exc:
+    if exc.name and exc.name.startswith("rich"):
+        raise SystemExit("Missing Rich. Install dependencies: python -m pip install -r requirements.txt") from exc
+    raise
+
 APP = "osintX"
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 UA = f"{APP}/{VERSION}"
 DEFAULT_TIMEOUT = 8.0
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -59,26 +66,7 @@ def out(data: dict[str, Any], json_mode: bool) -> None:
     if json_mode:
         print(json.dumps(data, indent=2, ensure_ascii=False))
         return
-    def render(key: str, value: Any, depth: int = 0) -> None:
-        indent = "  " * depth
-        if value is None or value == "" or value == []:
-            print(f"{indent}{key}: no data")
-            return
-        if isinstance(value, bool):
-            value = "yes" if value else "no"
-        if isinstance(value, dict):
-            print(f"{indent}{key}:")
-            for child, item in value.items():
-                render(str(child), item, depth + 1)
-        elif isinstance(value, (list, tuple)):
-            print(f"{indent}{key}:")
-            for index, item in enumerate(value, 1):
-                render(str(index), item, depth + 1)
-        else:
-            print(f"{indent}{key}: {value}")
-
-    for key, value in data.items():
-        render(key, value)
+    show_result(data)
 
 
 def get_json(url: str, timeout: float) -> dict[str, Any]:
@@ -537,13 +525,7 @@ MENU = {
 
 def menu() -> None:
     while True:
-        print()
-        print(f"{APP} {VERSION}")
-        print("=" * 60)
-        print("Choose a number, then follow the prompts.")
-        for number, (title, _) in MENU.items():
-            print(f"  {number}. {title}")
-        print("=" * 60)
+        show_menu(APP, VERSION, MENU)
         try:
             choice = prompt("Your choice")
         except (EOFError, KeyboardInterrupt):
@@ -552,27 +534,27 @@ def menu() -> None:
             return
         entry = MENU.get(choice)
         if not entry:
-            print("Invalid choice. Choose one of the displayed numbers.")
+            show_error("Invalid choice. Choose one of the displayed numbers.")
             continue
         label, handler = entry
         if handler is None:
             return
         try:
-            print(f"\n--- {label} ---")
+            console().rule(label, style="cyan")
             handler()
         except EOFError:
             return
         except UserError as exc:
-            print(f"Error: {exc}")
+            show_error(str(exc))
         except SystemExit as exc:
             if isinstance(exc.code, str):
                 print(exc.code, file=sys.stderr)
             else:
                 raise
         except KeyboardInterrupt:
-            print("\nOperation cancelled.")
+            console().print("Operation cancelled.", style="yellow")
         except Exception as exc:
-            print(f"Execution error: {exc}")
+            show_error(f"Execution error: {exc}")
         try:
             input("\nPress Enter to return to the menu...")
         except (EOFError, KeyboardInterrupt):

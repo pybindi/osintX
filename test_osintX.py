@@ -92,12 +92,14 @@ class MenuTests(unittest.TestCase):
         self.run_menu(["1", EOFError()])
 
     def test_hash_preserves_spaces_and_returns_to_menu(self):
-        output = self.run_menu(["6", "", " hello ", "", "0"])
-        self.assertIn(hashlib.sha256(b" hello ").hexdigest(), output)
+        with patch.object(app, "out") as output:
+            self.run_menu(["6", "", " hello ", "", "0"])
+            self.assertEqual(output.call_args.args[0]["hash"], hashlib.sha256(b" hello ").hexdigest())
 
     def test_empty_text_hash(self):
-        output = self.run_menu(["6", "", "", "", "0"])
-        self.assertIn(hashlib.sha256(b"").hexdigest(), output)
+        with patch.object(app, "out") as output:
+            self.run_menu(["6", "", "", "", "0"])
+            self.assertEqual(output.call_args.args[0]["hash"], hashlib.sha256(b"").hexdigest())
 
     def test_error_returns_to_menu(self):
         output = self.run_menu(["1", "not-an-ip", "", "0"])
@@ -147,8 +149,33 @@ class AddedToolsTests(unittest.TestCase):
         output = io.StringIO()
         with contextlib.redirect_stdout(output):
             app.out({"events": [{"action": "registration", "date": "2020-01-01"}]}, False)
-        self.assertIn("    action: registration", output.getvalue())
+        self.assertIn("registration", output.getvalue())
+        self.assertIn("action", output.getvalue())
         self.assertNotIn("{'action'", output.getvalue())
+
+
+class RichInterfaceTests(unittest.TestCase):
+    def test_json_output_has_no_decoration(self):
+        import json
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            app.out({"value": "[bold]literal[/bold]", "ok": True}, True)
+        self.assertEqual(json.loads(output.getvalue())["value"], "[bold]literal[/bold]")
+        self.assertNotIn("\x1b", output.getvalue())
+
+    def test_external_markup_is_literal(self):
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            app.out({"value": "[bold]literal[/bold]"}, False)
+        self.assertIn("[bold]literal[/bold]", output.getvalue())
+
+    def test_narrow_menu_renders(self):
+        import ui
+        from rich.console import Console
+        output = io.StringIO()
+        ui.show_menu(app.APP, app.VERSION, app.MENU, Console(file=output, width=40))
+        self.assertIn("osintX", output.getvalue())
+        self.assertIn("Offline", output.getvalue())
 
     def test_metadata_parser(self):
         parser = app.PublicPageMetadata()

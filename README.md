@@ -1,4 +1,30 @@
+<div align="center">
+
 # osintX
+
+### Public information. Clear results.
+
+[![Tests](https://github.com/pybindi/osintX/actions/workflows/tests.yml/badge.svg)](https://github.com/pybindi/osintX/actions/workflows/tests.yml)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Release](https://img.shields.io/github/v/release/pybindi/osintX)](https://github.com/pybindi/osintX/releases)
+[![Rich](https://img.shields.io/badge/Terminal-Rich-00bcd4)](https://github.com/Textualize/rich)
+
+**An interactive terminal toolkit with 11 focused tools.**
+Network lookups, offline phone metadata, readable results — no flags required.
+
+[Quick start](#installation) · [Tools](#interactive-menu) · [Data sources](#data-sources-and-limitations) · [Changelog](CHANGELOG.md)
+
+![osintX Rich terminal preview](docs/terminal.svg)
+
+</div>
+
+## What's new in 1.4
+
+- **Rich dashboard:** numbered tools with clear Offline/Network labels.
+- **Readable results:** nested tables, wrapped long values and error panels.
+- **Automation-friendly:** `--json` stays clean, without terminal decoration.
+- **Windows launcher:** automatically selects the project's `.venv` if present.
+- **Regression checks:** local tests plus a Windows/Linux GitHub Actions matrix.
 
 An English-language Python command-line toolkit for public network information and offline phone-number metadata. Launch it without arguments to use the numbered menu: no command-line flags are required.
 
@@ -7,17 +33,33 @@ An English-language Python command-line toolkit for public network information a
 - Python 3.10 or newer
 - Internet access for network lookups
 - `phonenumbers` for offline phone metadata (installed from `requirements.txt`)
+- `rich` for terminal presentation (installed from `requirements.txt`)
 
 Textual, `dig`, and the `whois` executable are not required.
 
 ## Installation
 
-Open a terminal in the project folder, then run:
+Clone the repository and enter its folder:
+
+```text
+git clone https://github.com/pybindi/osintX.git
+cd osintX
+```
+
+**Windows / PowerShell**
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
 .venv\Scripts\python.exe osintX.py
+```
+
+**Linux / macOS**
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python osintX.py
 ```
 
 Alternatively, install dependencies into your current Python environment:
@@ -27,7 +69,17 @@ python -m pip install -r requirements.txt
 python osintX.py
 ```
 
-On Windows, `start_osintX.cmd` starts the menu using `python` from your PATH. If you installed dependencies into `.venv`, use the virtual-environment command above.
+On Windows, double-click `start_osintX.cmd`. It uses `.venv\Scripts\python.exe` when present, otherwise `python` from your PATH.
+
+### Update an existing checkout
+
+```powershell
+git pull --ff-only
+python -m pip install -r requirements.txt
+python osintX.py
+```
+
+If using a virtual environment, replace `python` with its interpreter path.
 
 ## Interactive menu
 
